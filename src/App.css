@@ -1,0 +1,15 @@
+.my-swiper .swiper-pagination {
+  margin-top: 16px;
+  position: relative !important;
+  bottom: 0 !important;
+  text-align: center;
+}
+
+.my-swiper .swiper-pagination-bullet {
+  background-color: #f472b6 !important; /* Tailwind pink-400 */
+  opacity: 1 !important;
+}
+
+.my-swiper .swiper-pagination-bullet-active {
+  background-color: #ec4899 !important; /* Tailwind pink-500 */
+}
