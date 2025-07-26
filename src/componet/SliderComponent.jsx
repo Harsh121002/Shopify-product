@@ -4,6 +4,7 @@ import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import { FaPlay, FaTimes } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion"; // Import motion and AnimatePresence
 
 const slides = [
   {
@@ -43,7 +44,12 @@ export default function SliderComponent() {
       >
         {slides.map((slide, i) => (
           <SwiperSlide key={i}>
-            <div className="relative overflow-hidden shadow-md group">
+            <motion.div // Apply motion to the slide content container
+              className="relative overflow-hidden shadow-md group"
+              initial={{ opacity: 0, y: 50 }} // Initial state for animation
+              animate={{ opacity: 1, y: 0 }} // Animate to this state
+              transition={{ duration: 0.5, delay: i * 0.1 }} // Staggered animation
+            >
               <img
                 src={slide.img}
                 alt={slide.title}
@@ -53,12 +59,14 @@ export default function SliderComponent() {
               {/* Video Slide */}
               {slide.type === "video" ? (
                 <div className="absolute inset-0 bg-black bg-opacity-30 flex flex-col items-center justify-center text-white">
-                  <button
+                  <motion.button // Motion for the play button
                     onClick={() => setActiveVideo(slide.videoUrl)}
                     className="bg-white text-pink-500 p-4 rounded-full hover:scale-110 transition"
+                    whileHover={{ scale: 1.15 }} // Scale up on hover
+                    whileTap={{ scale: 0.95 }} // Slightly shrink on tap
                   >
                     <FaPlay />
-                  </button>
+                  </motion.button>
                   <p className="text-xl font-bold mt-4">{slide.title}</p>
                 </div>
               ) : (
@@ -80,44 +88,58 @@ export default function SliderComponent() {
                     )}
                   </h3>
 
-                  <button
-                    // onClick={() =>
-                    //   window.open("https://youtu.be/CF08u1qeHQ8", "_blank")
-                    // }
+                  <motion.button // Motion for the BUY NOW button
                     className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 text-sm font-semibold rounded transition-all duration-300"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
                     {slide.btn}
-                  </button>
+                  </motion.button>
                 </div>
               )}
-            </div>
+            </motion.div>
           </SwiperSlide>
         ))}
       </Swiper>
 
-      {/* Video Popup Overlay */}
-      {activeVideo && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center">
-          <div className="relative w-[90%] max-w-4xl">
-            <button
-              onClick={() => setActiveVideo(null)}
-              className="absolute -top-4 -right-4 bg-white text-black rounded-full p-2 shadow-md hover:rotate-90 transition"
+      {/* Video Popup Overlay with AnimatePresence */}
+      <AnimatePresence>
+        {activeVideo && (
+          <motion.div
+            className="fixed inset-0 bg-black bg-opacity-80 z-50 flex items-center justify-center"
+            initial={{ opacity: 0 }} // Initial state for popup
+            animate={{ opacity: 1 }} // Animate to this state when present
+            exit={{ opacity: 0 }} // Animate to this state when removed
+          >
+            <motion.div
+              className="relative w-[90%] max-w-4xl"
+              initial={{ scale: 0.8, y: -50 }} // Initial state for popup content
+              animate={{ scale: 1, y: 0 }} // Animate to this state
+              exit={{ scale: 0.8, y: -50 }} // Animate to this state when removed
+              transition={{ type: "spring", damping: 20, stiffness: 300 }} // Spring animation for a bouncy effect
             >
-              <FaTimes size={20} />
-            </button>
-            <div className="aspect-video w-full">
-              <iframe
-                src={activeVideo}
-                title="video"
-                className="w-full h-full rounded-lg"
-                frameBorder="0"
-                allow="autoplay; encrypted-media"
-                allowFullScreen
-              ></iframe>
-            </div>
-          </div>
-        </div>
-      )}
+              <motion.button // Motion for the close button
+                onClick={() => setActiveVideo(null)}
+                className="absolute -top-4 -right-4 bg-white text-black rounded-full p-2 shadow-md hover:rotate-90 transition"
+                whileHover={{ rotate: 90 }} // Rotate on hover
+                whileTap={{ scale: 0.9 }} // Slightly shrink on tap
+              >
+                <FaTimes size={20} />
+              </motion.button>
+              <div className="aspect-video w-full">
+                <iframe
+                  src={activeVideo}
+                  title="video"
+                  className="w-full h-full rounded-lg"
+                  frameBorder="0"
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                ></iframe>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

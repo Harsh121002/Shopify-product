@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
 import Imagesldier from "./Imageslider";
 
 const banners = [
@@ -75,7 +76,12 @@ const HeroSection = () => {
 
   return (
     <>
-      <div className="w-full h-screen overflow-hidden">
+      <motion.div
+        className="w-full h-screen overflow-hidden"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
+      >
         <div
           ref={containerRef}
           className="flex h-full overflow-x-hidden snap-x snap-mandatory touch-pan-x select-none"
@@ -97,7 +103,12 @@ const HeroSection = () => {
                 className="absolute top-0 left-0 w-full h-full object-cover z-0"
               />
               <div className="absolute top-0 left-0 w-full h-full z-10" />
-              <div className="absolute z-20 right-6 md:right-0 top-0 h-full flex flex-col justify-center gap-5 max-w-xl text-gray-700">
+              <motion.div
+                initial={{ x: 100, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                className="absolute z-20 right-6 md:right-0 top-0 h-full flex flex-col justify-center gap-5 max-w-xl text-gray-700"
+              >
                 {banner.subheading && (
                   <p className="text-pink-500 text-sm md:text-base mb-2">
                     {banner.subheading}
@@ -113,14 +124,12 @@ const HeroSection = () => {
                 <button className="mt-6 w-fit px-6 py-2 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-md">
                   {banner.button}
                 </button>
-              </div>
+              </motion.div>
             </div>
           ))}
         </div>
-        
-      </div>
+      </motion.div>
 
-      
       <Imagesldier />
     </>
   );

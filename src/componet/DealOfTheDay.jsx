@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import { FaStar, FaHeart, FaShoppingBag, FaEye } from "react-icons/fa";
+import { motion } from "framer-motion"; // <-- New import
 
 const products = [
   {
@@ -43,44 +44,78 @@ const products = [
 
 const TimerBox = ({ value, label }) => (
   <div className="text-center px-2">
-    <div className="text-sm font-bold">{value}</div>
+    <div className="text-sm font-bold">{String(value).padStart(2, "0")}</div>
     <div className="text-[10px] text-gray-500">{label}</div>
   </div>
 );
 
-
-
-
 const ProductCard = ({ product }) => {
-  
   const [selectedColor, setSelectedColor] = useState(null);
   const [hover, setHover] = useState(false);
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
 
-  
+  useEffect(() => {
+    const deadline = new Date();
+    deadline.setDate(deadline.getDate() + 3); // 3-day timer
+
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = deadline.getTime() - now;
+
+      if (distance < 0) {
+        clearInterval(interval);
+      } else {
+        setTimeLeft({
+          days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((distance / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((distance / 1000 / 60) % 60),
+          seconds: Math.floor((distance / 1000) % 60),
+        });
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="flex flex-col items-center gap-2">
-      {/* Product Card */}
-      <div
-        className="bg-white  shadow-md overflow-hidden transition duration-300 group w-full relative"
+    <motion.div
+      className="flex flex-col items-center gap-2"
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true }}
+    >
+      <motion.div
+        className="bg-white shadow-md overflow-hidden group w-full relative"
+        whileHover={{ scale: 1.03 }}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
       >
-        {/* Hover Buttons */}
         {hover && (
-          <div className="absolute top-3 flex flex-col right-3 space-y-2 z-10 transition-all duration-300">
-            <button className="bg-white p-2 rounded shadow hover:text-pink-500">
-              <FaHeart />
-            </button>
-            <button className="bg-white p-2 rounded shadow hover:text-pink-500">
-              <FaShoppingBag />
-            </button>
-            <button className="bg-white p-2 rounded shadow hover:text-pink-500">
-              <FaEye />
-            </button>
-          </div>
+          <motion.div
+            className="absolute top-3 right-3 flex flex-col space-y-2 z-10"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            {[FaHeart, FaShoppingBag, FaEye].map((Icon, i) => (
+              <motion.button
+                key={i}
+                whileTap={{ scale: 0.9 }}
+                whileHover={{ rotate: 5 }}
+                className="bg-white p-2 rounded shadow hover:text-pink-500"
+              >
+                <Icon />
+              </motion.button>
+            ))}
+          </motion.div>
         )}
 
-        {/* Product Image */}
         <div className="h-72 w-full flex justify-center items-center">
           <img
             src={hover ? product.hoverImage : product.image}
@@ -89,20 +124,19 @@ const ProductCard = ({ product }) => {
           />
         </div>
 
-        {/* Timer inside card */}
+        {/* Countdown Timer */}
         <div className="p-2">
           <div className="flex justify-center">
-            <TimerBox value="4726" label="DAY" />
-            <TimerBox value="04" label="HRS" />
-            <TimerBox value="48" label="MIN" />
-            <TimerBox value="00" label="SEC" />
+            <TimerBox value={timeLeft.days} label="DAY" />
+            <TimerBox value={timeLeft.hours} label="HRS" />
+            <TimerBox value={timeLeft.minutes} label="MIN" />
+            <TimerBox value={timeLeft.seconds} label="SEC" />
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Outside: Product Details */}
+      {/* Product Details */}
       <div className="text-center px-2 py-3">
-        {/* Rating */}
         <div className="flex justify-center gap-1 mb-1">
           {[...Array(5)].map((_, i) => (
             <FaStar
@@ -113,40 +147,32 @@ const ProductCard = ({ product }) => {
           ))}
         </div>
 
-        <h3 className="text-gray-800 font-semibold text-sm mb-1">
-          {product.title}
-        </h3>
-        <div className="text-pink-500 font-bold text-sm mb-2">
-          {product.price}
-        </div>
+        <h3 className="text-gray-800 font-semibold text-sm mb-1">{product.title}</h3>
+        <div className="text-pink-500 font-bold text-sm mb-2">{product.price}</div>
 
-        {/* Color Options */}
         <div className="flex justify-center gap-2">
           {product.colors.map((color, index) => (
-            <button
+            <motion.button
               key={index}
-              className={`w-5 h-5 rounded-full border-2 ${selectedColor === index
-                  ? "border-black scale-110"
-                  : "border-gray-300"
-                } transition-transform`}
+              whileTap={{ scale: 0.9 }}
+              className={`w-5 h-5 rounded-full border-2 ${
+                selectedColor === index ? "border-black scale-110" : "border-gray-300"
+              } transition-transform`}
               style={{ backgroundColor: color }}
               onClick={() => setSelectedColor(index)}
-            ></button>
+            ></motion.button>
           ))}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
 export default function DealOfTheDay() {
- 
   return (
     <section className="bg-[#f7f2f2] py-10 px-4">
       <div className="flex items-center justify-center px-6 mx-16 md:px-12 py-6 bg-[#f7f3f2]">
         <h2 className="text-4xl font-bold text-gray-700">Deal of the day</h2>
-
-      
       </div>
 
       <Swiper

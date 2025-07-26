@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import { FaStar, FaHeart, FaShoppingBag, FaEye } from "react-icons/fa";
+import { motion } from "framer-motion";
 
 const products = [
   {
@@ -14,6 +15,7 @@ const products = [
     hoverImage: "/images/l12.webp",
     colors: ["#d2b48c", "#a0522d", "#8b4513"],
     rating: 4,
+    countdownEnd: new Date(Date.now() + 86400000),
   },
   {
     title: "Body liquid illuminator",
@@ -22,6 +24,7 @@ const products = [
     hoverImage: "/images/l22.webp",
     colors: ["#ffc0cb", "#f0d3c8", "#e9a3b0"],
     rating: 3,
+    countdownEnd: new Date(Date.now() + 7200000),
   },
   {
     title: "Lipstick",
@@ -30,6 +33,7 @@ const products = [
     hoverImage: "/images/l32.webp",
     colors: ["#3d0c0c", "#a60303", "#d91e18"],
     rating: 5,
+    countdownEnd: new Date(Date.now() + 43200000),
   },
   {
     title: "Soft satin lipstick",
@@ -38,6 +42,7 @@ const products = [
     hoverImage: "/images/l42.webp",
     colors: ["#d2a679", "#a05c3b", "#7b3f00"],
     rating: 4,
+    countdownEnd: new Date(Date.now() + 18000000),
   },
 ];
 
@@ -48,39 +53,73 @@ const TimerBox = ({ value, label }) => (
   </div>
 );
 
-
-
-
 const ProductCard = ({ product }) => {
-  
   const [selectedColor, setSelectedColor] = useState(null);
   const [hover, setHover] = useState(false);
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
 
-  
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const difference = new Date(product.countdownEnd) - now;
+
+      if (difference <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((difference / (1000 * 60)) % 60);
+      const seconds = Math.floor((difference / 1000) % 60);
+
+      setTimeLeft({ days, hours, minutes, seconds });
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [product.countdownEnd]);
+
   return (
-    <div className="flex flex-col items-center gap-2">
-      {/* Product Card */}
-      <div
-        className="bg-white  shadow-md overflow-hidden transition duration-300 group w-full relative"
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      viewport={{ once: true }}
+      className="flex flex-col items-center gap-2"
+    >
+      <motion.div
+        className="bg-white shadow-md overflow-hidden transition group w-full relative"
+        whileHover={{ scale: 1.03 }}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
       >
-        {/* Hover Buttons */}
         {hover && (
-          <div className="absolute top-3 flex flex-col right-3 space-y-2 z-10 transition-all duration-300">
-            <button className="bg-white p-2 rounded shadow hover:text-pink-500">
-              <FaHeart />
-            </button>
-            <button className="bg-white p-2 rounded shadow hover:text-pink-500">
-              <FaShoppingBag />
-            </button>
-            <button className="bg-white p-2 rounded shadow hover:text-pink-500">
-              <FaEye />
-            </button>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ type: "spring", stiffness: 300 }}
+            className="absolute top-3 right-3 flex flex-col space-y-2 z-10"
+          >
+            {[FaHeart, FaShoppingBag, FaEye].map((Icon, i) => (
+              <motion.button
+                key={i}
+                className="bg-white p-2 rounded shadow hover:text-pink-500"
+                whileTap={{ scale: 0.9 }}
+                whileHover={{ rotate: 5 }}
+              >
+                <Icon />
+              </motion.button>
+            ))}
+          </motion.div>
         )}
 
-        {/* Product Image */}
         <div className="h-72 w-full flex justify-center items-center">
           <img
             src={hover ? product.hoverImage : product.image}
@@ -89,20 +128,17 @@ const ProductCard = ({ product }) => {
           />
         </div>
 
-        {/* Timer inside card */}
         <div className="p-2">
           <div className="flex justify-center">
-            <TimerBox value="4726" label="DAY" />
-            <TimerBox value="04" label="HRS" />
-            <TimerBox value="48" label="MIN" />
-            <TimerBox value="00" label="SEC" />
+            <TimerBox value={timeLeft.days} label="DAY" />
+            <TimerBox value={String(timeLeft.hours).padStart(2, "0")} label="HRS" />
+            <TimerBox value={String(timeLeft.minutes).padStart(2, "0")} label="MIN" />
+            <TimerBox value={String(timeLeft.seconds).padStart(2, "0")} label="SEC" />
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Outside: Product Details */}
       <div className="text-center px-2 py-3">
-        {/* Rating */}
         <div className="flex justify-center gap-1 mb-1">
           {[...Array(5)].map((_, i) => (
             <FaStar
@@ -120,54 +156,52 @@ const ProductCard = ({ product }) => {
           {product.price}
         </div>
 
-        {/* Color Options */}
         <div className="flex justify-center gap-2">
           {product.colors.map((color, index) => (
-            <button
+            <motion.button
               key={index}
-              className={`w-5 h-5 rounded-full border-2 ${selectedColor === index
-                  ? "border-black scale-110"
-                  : "border-gray-300"
-                } transition-transform`}
+              whileTap={{ scale: 0.9 }}
+              className={`w-5 h-5 rounded-full border-2 ${
+                selectedColor === index ? "border-black scale-110" : "border-gray-300"
+              } transition-transform`}
               style={{ backgroundColor: color }}
               onClick={() => setSelectedColor(index)}
-            ></button>
+            ></motion.button>
           ))}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
 export default function ProductSlider() {
   const [activeCategory, setActiveCategory] = useState("SOFT BRONZER");
 
-
   const categories = ["SOFT BRONZER", "FACE BRUSH", "NAIL POLISH"];
 
   const handleClick = (category) => {
-  setActiveCategory(category);
-  
-};
+    setActiveCategory(category);
+  };
+
   return (
     <section className="bg-[#f7f2f2] py-10 px-4">
       <div className="flex items-center justify-between px-6 mx-16 md:px-12 py-6 bg-[#f7f3f2]">
         <h2 className="text-3xl font-bold text-gray-800">Featured products</h2>
-
         <div className="flex space-x-3 text-sm font-semibold">
-      {categories.map((category) => (
-  <button
-    key={category}
-    onClick={() => handleClick(category)}
-    className={`px-6 py-2   transition 
-      ${activeCategory === category 
-        ? "bg-pink-500 text-white" 
-        : "text-gray-800 hover:text-pink-500"}`}
-  >
-    {category}
-  </button>
-))}
-      </div>
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => handleClick(category)}
+              className={`px-6 py-2 transition ${
+                activeCategory === category
+                  ? "bg-pink-500 text-white"
+                  : "text-gray-800 hover:text-pink-500"
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
       </div>
 
       <Swiper
